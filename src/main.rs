@@ -3,6 +3,8 @@ use teloxide::{prelude::*, utils::command::BotCommands, types::MessageKind, type
 use std::error::Error;
 use std::{env};
 use dotenv::dotenv;
+use diesel::prelude::*;
+use diesel::r2d2::{self, ConnectionManager};
 
 mod helpers;
 mod types;
@@ -11,6 +13,7 @@ use crate::types::ledger::Ledger;
 
 extern crate pretty_env_logger;
 #[macro_use] extern crate log;
+#[macro_use] extern crate diesel;
 
 
 #[tokio::main]
