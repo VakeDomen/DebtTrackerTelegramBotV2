@@ -4,6 +4,7 @@ use chrono::NaiveDateTime;
 use teloxide::types::UserId;
 use super::{transaction_type::TransactionType};
 use uuid::Uuid;
+use super::schema::transactions;
 
 #[derive(Debug)]
 pub struct Transaction {
@@ -16,7 +17,8 @@ pub struct Transaction {
     pub created: NaiveDateTime,
 }
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Debug, Insertable)]
+#[table_name = "transactions"]
 pub struct SqliteTransaction {
     pub id: String,
     pub transaction_type: String,

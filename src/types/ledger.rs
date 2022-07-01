@@ -1,5 +1,6 @@
 use teloxide::types::UserId;
 use uuid::Uuid;
+use super::schema::ledgers;
 
 #[derive(Debug)]
 pub struct Ledger {
@@ -9,7 +10,8 @@ pub struct Ledger {
     pub sum: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Insertable, Queryable)]
+#[table_name = "ledgers"]
 pub struct SqliteLedger {
     pub id: String,
     pub lender: String,
