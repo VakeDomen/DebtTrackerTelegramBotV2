@@ -7,21 +7,24 @@ use super::data_handler::insert_ledger;
 use super::data_handler::insert_transaction;
 use super::data_handler::update_ledger;
 use super::ledger_handler::create_ledger_from_transaction;
+use super::text_helper::generate_transaction_response;
 
-pub fn execute_transaction(transaction: NewTransaction) -> bool {
+pub fn execute_transaction(transaction: NewTransaction) -> String {
     match transaction.transaction_type {
-        TransactionType::Loan => execute_loan(transaction),
-        TransactionType::Payment => execute_payment(transaction),
+        TransactionType::Loan => generate_transaction_response(&transaction, execute_loan(transaction)),
+        TransactionType::Payment => generate_transaction_response(&transaction, execute_payment(transaction)),
     }
 }
 
-pub fn execute_transactions(mut transactions: Vec<NewTransaction>) {
+pub fn execute_transactions(mut transactions: Vec<NewTransaction>) -> Vec<String> {
     let num_of_transactions = transactions.len();
+    let transaction_responses = vec![]; 
     for _ in 0..num_of_transactions {
         if let Some(transaction) = transactions.pop() {
-            execute_transaction(transaction);
+            transaction_responses.push(execute_transaction(transaction));
         }
     }
+    transaction_responses
 }
 
 fn execute_payment(transaction: NewTransaction) -> bool {
@@ -31,6 +34,7 @@ fn execute_payment(transaction: NewTransaction) -> bool {
 }
 
 fn execute_loan(transaction: NewTransaction) -> bool {
+    
     let ledger_option: Option<Ledger> = match get_ledger(&transaction.reciever, &transaction.initiator) {
         Ok(mut ledgers) => {
             // query could be Ok() but empty, since

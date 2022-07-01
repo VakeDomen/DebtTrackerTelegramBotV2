@@ -1,10 +1,4 @@
-use teloxide::types::UserId;
-
-use crate::types::{ledger::{Ledger, NewLedger}, transaction::{Transaction, NewTransaction}};
-
-pub fn find_ledgers_by_loaners_and_borrowers(loaners: &Vec<UserId>, borrowers: &Vec<UserId>) -> Vec<Ledger> {
-    vec![]
-}
+use crate::types::{ledger::NewLedger, transaction::NewTransaction};
 
 pub fn create_ledger_from_transaction(transaction: &NewTransaction) -> NewLedger {
     NewLedger {
