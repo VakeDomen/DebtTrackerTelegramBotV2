@@ -42,7 +42,7 @@ impl From<SqliteTransaction> for Transaction {
     fn from(transaction: SqliteTransaction) -> Self {
         Self { 
             id: transaction.id, 
-            transaction_type: TransactionType::from(transaction.transaction_type), 
+            transaction_type: serde_json::from_str(&transaction.transaction_type).unwrap(), 
             initiator: serde_json::from_str(&transaction.initiator).unwrap(), 
             reciever: serde_json::from_str(&transaction.reciever).unwrap(), 
             sum: transaction.sum, 
