@@ -18,11 +18,9 @@ async fn main() {
     // setup env variables
     dotenv().ok();
     env::set_var("TELOXIDE_TOKEN", env::var("TELOXIDE_TOKEN").expect("$TELOXIDE_TOKEN is not set"));
-    // env::set_var("CHAT_ID", env::var("CHAT_ID").expect("$CHAT_ID is not set"));
     
     // init stuff
     pretty_env_logger::init();
-    // init_queue();
 
     // run bot
     let bot = Bot::from_env().auto_send();
