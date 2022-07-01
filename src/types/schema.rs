@@ -1,8 +1,8 @@
 table! {
     ledgers (id) {
         id -> Text,
-        lender -> Text,
-        borower -> Text,
+        borrower -> Text,
+        owes -> Text,
         sum -> Integer,
     }
 }

@@ -9,8 +9,8 @@ create table users
 create table ledgers
 (
     id          varchar not null primary key,
-    lender      varchar not null,
-    borower     varchar not null,
+    borrower      varchar not null,
+    owes     varchar not null,
     sum         int not null
 );
 
