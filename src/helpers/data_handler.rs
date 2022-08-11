@@ -54,6 +54,14 @@ pub fn get_user_by_user_id(query_id: &UserId) -> Result<Vec<User>, Error> {
     Ok(resp.into_iter().map(|u| User::from(u)).collect())
 }
 
+pub fn get_user_by_username(query_username: String) -> Result<Vec<User>, Error> {
+    let conn = establish_connection();
+    let resp = users
+        .filter(name.eq(query_username))
+        .load::<SqliteUser>(&conn)?;
+    Ok(resp.into_iter().map(|u| User::from(u)).collect())
+}
+
 pub fn insert_user(new_user: NewUser) -> Result<User, Error>  {
     let sqlite_user = SqliteUser::from(new_user);
     let conn = establish_connection();

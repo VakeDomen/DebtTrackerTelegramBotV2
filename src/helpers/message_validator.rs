@@ -2,10 +2,12 @@ extern crate chrono;
 
 use std::error::Error;
 use serde::__private::de;
-use teloxide::types::{Message, MessageKind, MediaKind};
+use teloxide::types::{Message, MessageKind, MediaKind, MediaText};
 use chrono::Utc;
 
 use crate::{types::{transaction::NewTransaction, user::User}, helpers::data_handler::get_user_by_user_id};
+
+use super::data_handler::get_user_by_username;
 
 
 pub fn validate_loan_message(message: Message) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
@@ -32,10 +34,11 @@ pub fn validate_loan_message(message: Message) -> Result<Vec<NewTransaction>, Bo
         None => return Err("Amount not specified correctly".into()),
     };
     // extract all recievers
-    let recievers = match extract_recievers(&message) {
+    let recievers = match extract_recievers(media) {
         Ok(recv) => recv,
         Err(e) => return Err(e.into()),
     };
+    println!("recievers {:#?}", recievers);
     // extract description
     let desctription = match extract_description(&media.text) {
         Ok(desc) => desc,
@@ -46,8 +49,7 @@ pub fn validate_loan_message(message: Message) -> Result<Vec<NewTransaction>, Bo
         Ok(transactions) => transactions,
         Err(e) => return Err(e.into()),
     };
-
-    Ok(vec![])
+    Ok(transactions)
 }
 
 fn extract_description(text: &String) -> Result<String, Box<dyn Error>> {
@@ -93,8 +95,26 @@ fn extract_loan_amount(text: &String) -> Option<f64> {
     }
 }
 
-fn extract_recievers(message: &Message)  -> Result<Vec<User>, Box<dyn Error>> {
-    Ok(vec![])
+fn extract_recievers(message: &MediaText)  -> Result<Vec<User>, Box<dyn Error>> {
+    let mut users = vec![];
+    for entity in message.to_owned().entities.into_iter() {
+        let username = match entity.kind {
+            teloxide::types::MessageEntityKind::Mention => &message.text[(entity.offset + 1)..(entity.offset+entity.length)],
+            _ => continue
+        };
+        let user = match get_user_by_username(username.to_owned()) {
+            Ok(mut found_users) => {
+                let u = match found_users.pop() {
+                    Some(u) => u,
+                    None => continue,
+                };
+                u
+            },
+            Err(e) => return Err(e.into())
+        };
+        users.push(user);
+    }
+    Ok(users)
 }
 
 fn extract_user(message: &Message) -> Result<User, Box<dyn Error>> {

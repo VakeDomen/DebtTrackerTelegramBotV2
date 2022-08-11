@@ -1,5 +1,6 @@
-use std::str::FromStr;
 
+
+use std::str::FromStr;
 use chrono::NaiveDateTime;
 use teloxide::types::UserId;
 use super::{transaction_type::TransactionType};
@@ -40,14 +41,15 @@ pub struct NewTransaction {
 
 impl From<SqliteTransaction> for Transaction {
     fn from(transaction: SqliteTransaction) -> Self {
+        println!("{:#?}", transaction.transaction_type);
         Self { 
             id: transaction.id, 
-            transaction_type: serde_json::from_str(&transaction.transaction_type).unwrap(), 
+            transaction_type: transaction.transaction_type.parse().unwrap(),
             initiator: serde_json::from_str(&transaction.initiator).unwrap(), 
             reciever: serde_json::from_str(&transaction.reciever).unwrap(), 
             sum: transaction.sum, 
             description: transaction.description, 
-            created: NaiveDateTime::from_str(&transaction.created).unwrap() 
+            created: NaiveDateTime::parse_from_str(&transaction.created, "%Y-%m-%d %H:%M:%S%.f").unwrap(), 
         }
     }
 }

@@ -12,6 +12,7 @@ use helpers::text_helper::PAY_DESCRIPTION;
 use crate::helpers::data_handler::{insert_user, get_user_by_user_id, update_user};
 use crate::helpers::transaction_handler::execute_transactions;
 
+extern crate strum;
 extern crate pretty_env_logger;
 
 #[macro_use] extern crate log;

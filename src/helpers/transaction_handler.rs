@@ -1,8 +1,11 @@
+use diesel::IntoSql;
+
 use crate::types::transaction::NewTransaction;
 use crate::types::transaction_type::TransactionType;
 use crate::types::ledger::Ledger;
 
 use super::data_handler::get_ledger;
+use super::data_handler::get_user_by_user_id;
 use super::data_handler::insert_ledger;
 use super::data_handler::insert_transaction;
 use super::data_handler::update_ledger;
@@ -10,10 +13,20 @@ use super::ledger_handler::create_ledger_from_transaction;
 use super::text_helper::generate_transaction_response;
 
 pub fn execute_transaction(transaction: NewTransaction) -> String {
-    match transaction.transaction_type {
-        TransactionType::Loan => generate_transaction_response(transaction.sum, transaction.reciever, execute_loan(transaction)),
-        TransactionType::Payment => generate_transaction_response(transaction.sum, transaction.reciever, execute_payment(transaction)),
-    }
+    let reciever = match get_user_by_user_id(&transaction.reciever) {
+        Ok(mut user) => user.pop().unwrap(),
+        Err(e) => return e.to_string(), 
+    };
+    let sender = match get_user_by_user_id(&transaction.initiator) {
+        Ok(mut user) => user.pop().unwrap(),
+        Err(e) => return e.to_string(), 
+    };
+    let sum = transaction.sum;
+    let succ = match transaction.transaction_type {
+        TransactionType::Loan => execute_loan(transaction),
+        TransactionType::Payment => execute_payment(transaction),
+    };
+    generate_transaction_response(sum, sender, reciever, succ)
 }
 
 pub fn execute_transactions(mut transactions: Vec<NewTransaction>) -> Vec<String> {
