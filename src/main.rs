@@ -36,9 +36,9 @@ enum Command {
     #[command(description = "Display help text")]
     Help,
     #[command(description = "Loan money to (multiple) people")]
-    Loan(String),
+    Loan,
     #[command(description = "Pay money back to a person")]
-    Pay(String),
+    Pay,
     #[command(description = "Show ledger balance")]
     Balance,
     #[command(description = "Show past transactions")]
@@ -55,13 +55,13 @@ async fn answer(
     command: Command,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match command {
-        Command::Help                   => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
-        Command::Loan(input)     => { bot.send_message(message.chat.id, loan(&bot, message, input)).await? },
-        Command::Pay(input)     => { bot.send_message(message.chat.id, pay(&bot, message, input)).await? },
-        Command::Balance     => { bot.send_message(message.chat.id, balance(&bot, message)).await? },
-        Command::History                   => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
-        Command::Stats                   => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
-        Command::Register                   => { bot.send_message(message.chat.id, register(&bot,message)).await? },
+        Command::Help => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
+        Command::Loan => { bot.send_message(message.chat.id, loan(&bot, message)).await? },
+        Command::Pay => { bot.send_message(message.chat.id, pay(&bot, message)).await? },
+        Command::Balance => { bot.send_message(message.chat.id, balance(&bot, message)).await? },
+        Command::History => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
+        Command::Stats => { bot.send_message(message.chat.id, Command::descriptions().to_string()).await? },
+        Command::Register => { bot.send_message(message.chat.id, register(&bot,message)).await? },
     };
     Ok(())
 }
@@ -119,7 +119,6 @@ fn register(
 fn loan(
     _: &AutoSend<Bot>,
     message: Message,
-    task_index: String
 ) -> String {
     info!("Some user is claiming a task!");
     match message_validator::validate_loan_message(message) {
@@ -131,7 +130,6 @@ fn loan(
 fn pay(
     _: &AutoSend<Bot>,
     message: Message,
-    task_index: String
 ) -> String {
     info!("Some user is claiming a task!");
     match message.kind {
