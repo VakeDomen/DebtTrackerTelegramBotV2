@@ -2,7 +2,7 @@
 create table users
 (
     id          varchar not null primary key,
-    chat_id     varchar not null,
+    user_id     varchar not null,
     name        varchar not null
 );
 

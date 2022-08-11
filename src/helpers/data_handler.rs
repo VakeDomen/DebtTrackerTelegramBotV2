@@ -1,11 +1,12 @@
 
-use crate::types::{transaction::{Transaction, NewTransaction, SqliteTransaction}, ledger::{Ledger, SqliteLedger, NewLedger}};
+use crate::types::{transaction::{Transaction, NewTransaction, SqliteTransaction}, ledger::{Ledger, SqliteLedger, NewLedger}, user::{SqliteUser, NewUser, User}};
 use diesel::{SqliteConnection, Connection, QueryDsl, result::Error, insert_into};
 use teloxide::types::UserId;
 use std::{env};
 use diesel::prelude::*;
 use crate::types::schema::ledgers::dsl::*;
 use crate::types::schema::transactions::dsl::*;
+use crate::types::schema::users::dsl::*;
 
 pub fn get_ledger(bor: &UserId, owe: &UserId) -> Result<Vec<Ledger>, Error> {
     let connection = establish_connection();
@@ -43,6 +44,30 @@ pub fn insert_transaction(new_transaction: NewTransaction) -> Result<Transaction
         .values(&sqlite_transaction)
         .execute(&conn)?;
     Ok(Transaction::from(sqlite_transaction))
+}
+
+pub fn get_user_by_user_id(query_id: &UserId) -> Result<Vec<User>, Error> {
+    let conn = establish_connection();
+    let resp = users
+        .filter(user_id.eq(query_id.to_string()))
+        .load::<SqliteUser>(&conn)?;
+    Ok(resp.into_iter().map(|u| User::from(u)).collect())
+}
+
+pub fn insert_user(new_user: NewUser) -> Result<User, Error>  {
+    let sqlite_user = SqliteUser::from(new_user);
+    let conn = establish_connection();
+    let resp = insert_into(users)
+        .values(&sqlite_user)
+        .execute(&conn)?;
+    Ok(User::from(sqlite_user))
+}
+
+pub fn update_user(user: User) -> Result<User, Error> {
+    let sqlite_user = SqliteUser::from(user);
+    let conn = establish_connection();
+    let updated_user: SqliteUser = sqlite_user.save_changes::<SqliteUser>(&conn)?;
+    Ok(User::from(updated_user))
 }
 
 fn establish_connection() -> SqliteConnection {

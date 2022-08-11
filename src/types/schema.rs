@@ -22,7 +22,7 @@ table! {
 table! {
     users (id) {
         id -> Text,
-        chat_id -> Text,
+        user_id -> Text,
         name -> Text,
     }
 }

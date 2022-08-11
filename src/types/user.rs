@@ -9,7 +9,7 @@ pub struct User {
     pub username: String
 }
 
-#[derive(Queryable, Debug, Insertable)]
+#[derive(Debug, Insertable, Queryable, Identifiable, AsChangeset)]
 #[table_name = "users"]
 pub struct SqliteUser {
     pub id: String,
@@ -32,11 +32,11 @@ impl From<SqliteUser> for User {
     }
 }
 
-impl From<teloxide::types::User> for NewUser {
-    fn from(user: teloxide::types::User) -> Self {
+impl From<&teloxide::types::User> for NewUser {
+    fn from(user: &teloxide::types::User) -> Self {
         Self {
             user_id: user.id,
-            username: user.username.expect("Unable to determine username")
+            username: user.username.as_ref().expect("Unable to determine username").to_string()
         }
     }
 }

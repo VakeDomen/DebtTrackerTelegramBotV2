@@ -11,14 +11,14 @@ use super::text_helper::generate_transaction_response;
 
 pub fn execute_transaction(transaction: NewTransaction) -> String {
     match transaction.transaction_type {
-        TransactionType::Loan => generate_transaction_response(&transaction, execute_loan(transaction)),
-        TransactionType::Payment => generate_transaction_response(&transaction, execute_payment(transaction)),
+        TransactionType::Loan => generate_transaction_response(transaction.sum, transaction.reciever, execute_loan(transaction)),
+        TransactionType::Payment => generate_transaction_response(transaction.sum, transaction.reciever, execute_payment(transaction)),
     }
 }
 
 pub fn execute_transactions(mut transactions: Vec<NewTransaction>) -> Vec<String> {
     let num_of_transactions = transactions.len();
-    let transaction_responses = vec![]; 
+    let mut transaction_responses = vec![]; 
     for _ in 0..num_of_transactions {
         if let Some(transaction) = transactions.pop() {
             transaction_responses.push(execute_transaction(transaction));
