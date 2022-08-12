@@ -20,11 +20,12 @@ pub fn execute_transaction(transaction: NewTransaction) -> String {
         Err(e) => return e.to_string(), 
     };
     let sum = transaction.sum;
+    let tr_type = transaction.transaction_type;
     let succ = match transaction.transaction_type {
         TransactionType::Loan => execute_loan(transaction),
         TransactionType::Payment => execute_payment(transaction),
     };
-    generate_transaction_response(sum, sender, reciever, succ)
+    generate_transaction_response(sum, sender, reciever, succ, tr_type)
 }
 
 pub fn execute_transactions(mut transactions: Vec<NewTransaction>) -> Vec<String> {
