@@ -20,7 +20,10 @@ pub fn execute_transaction(transaction: NewTransaction) -> String {
         Err(e) => return e.to_string(), 
     };
     let sum = transaction.sum;
-    let tr_type = transaction.transaction_type;
+    let tr_type = match &transaction.transaction_type {
+        TransactionType::Loan => TransactionType::Loan,
+        TransactionType::Payment => TransactionType::Payment,
+    };
     let succ = match transaction.transaction_type {
         TransactionType::Loan => execute_loan(transaction),
         TransactionType::Payment => execute_payment(transaction),
