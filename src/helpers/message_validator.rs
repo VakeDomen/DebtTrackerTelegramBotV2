@@ -5,14 +5,23 @@ use serde::__private::de;
 use teloxide::types::{Message, MessageKind, MediaKind, MediaText};
 use chrono::Utc;
 
-use crate::{types::{transaction::NewTransaction, user::User}, helpers::data_handler::get_user_by_user_id};
+use crate::{types::{transaction::NewTransaction, user::User, transaction_type::TransactionType, schema::transactions::transaction_type}, helpers::data_handler::get_user_by_user_id};
 
 use super::data_handler::get_user_by_username;
 
 
 pub fn validate_loan_message(message: Message) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
-    println!("{:#?}", message);
+    validate_message(message, TransactionType::Loan)
+}
 
+pub fn validate_pay_message(message: Message) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
+    validate_message(message, TransactionType::Payment)
+}
+
+pub fn validate_message(
+    message: Message, 
+    message_type: TransactionType
+) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
     // find sender -> throw any invalid states
     let user = match extract_user(&message) {
         Ok(user) => user,
@@ -38,29 +47,38 @@ pub fn validate_loan_message(message: Message) -> Result<Vec<NewTransaction>, Bo
         Ok(recv) => recv,
         Err(e) => return Err(e.into()),
     };
-    println!("recievers {:#?}", recievers);
     // extract description
     let desctription = match extract_description(&media.text) {
         Ok(desc) => desc,
         Err(e) => return Err(e.into()),
     };
     // convert into transactions
-    let transactions = match into_transactions(user, amount, recievers, desctription) {
+    let transactions = match into_transactions(
+            user, 
+            amount, 
+            recievers, 
+            desctription,
+            message_type
+        ) {
         Ok(transactions) => transactions,
         Err(e) => return Err(e.into()),
     };
     Ok(transactions)
 }
 
+
 fn extract_description(text: &String) -> Result<String, Box<dyn Error>> {
     Ok(text.to_string())
 }
 
-pub fn validate_pay_message(message: Message) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
-    Ok(vec![])
-}
 
-fn into_transactions(sender: User, amount: f64, recievers: Vec<User>, description: String) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
+fn into_transactions(
+    sender: User, 
+    amount: f64, 
+    recievers: Vec<User>, 
+    description: String, 
+    trans_type: TransactionType
+) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
     if recievers.len() == 0 {
         return Err("No recievers recognised.".into());
     }
@@ -69,7 +87,7 @@ fn into_transactions(sender: User, amount: f64, recievers: Vec<User>, descriptio
     let mut transactions = vec![];
     recievers.into_iter().for_each(|reciever| {
         transactions.push(NewTransaction {
-            transaction_type: crate::types::transaction_type::TransactionType::Loan,
+            transaction_type: trans_type.clone(),
             initiator: sender.user_id,
             reciever: reciever.user_id,
             sum: one_share,
@@ -88,7 +106,6 @@ fn extract_loan_amount(text: &String) -> Option<f64> {
     }
     let amount_fragment = text_fragments[1].replace(",", ".");
     let amount = amount_fragment.parse::<f64>();
-    println!("{:#?}", amount);
     match amount {
         Ok(a) => Some(a),
         Err(_) => None,

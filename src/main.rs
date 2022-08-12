@@ -133,15 +133,9 @@ fn pay(
     message: Message,
 ) -> String {
     info!("User is executing a payment!");
-    match message.kind {
-        MessageKind::Common(mes) => {
-            match mes.media_kind {
-                MediaKind::Text(media) => { format!("{:#?}", media.entities) },
-                _ => "Not text media".to_string()
-            }
-            
-        },
-        _ => "Not common message".to_string()
+    match message_validator::validate_pay_message(message) {
+        Ok(transactions) => execute_transactions(transactions).join("\n"),
+        Err(e) => e.to_string()
     }
 }
 
@@ -157,7 +151,6 @@ fn balance(
                 MediaKind::Text(media) => { format!("{:#?}", media.entities) },
                 _ => "Not text media".to_string()
             }
-            
         },
         _ => "Not common message".to_string()
     }
