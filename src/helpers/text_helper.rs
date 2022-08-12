@@ -15,6 +15,6 @@ pub fn generate_transaction_response(sum: i32, sender: User, reciever: User, suc
             (sum as f32 / 100.), 
             reciever.username
         ),
-        false => "Oops! Something went wrong when processing the transaction! :(".to_string()
+       false => "Oops! Something went wrong when processing the transaction! :(".to_string()
     }
 }

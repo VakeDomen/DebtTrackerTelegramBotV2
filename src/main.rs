@@ -121,7 +121,7 @@ fn loan(
     _: &AutoSend<Bot>,
     message: Message,
 ) -> String {
-    info!("Some user is claiming a task!");
+    info!("User is executing a loan!");
     match message_validator::validate_loan_message(message) {
         Ok(transactions) => execute_transactions(transactions).join("\n"),
         Err(e) => e.to_string()
@@ -132,7 +132,7 @@ fn pay(
     _: &AutoSend<Bot>,
     message: Message,
 ) -> String {
-    info!("Some user is claiming a task!");
+    info!("User is executing a payment!");
     match message.kind {
         MessageKind::Common(mes) => {
             match mes.media_kind {

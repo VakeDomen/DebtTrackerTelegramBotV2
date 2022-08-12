@@ -14,6 +14,13 @@ create table ledgers
     sum         int not null
 );
 
+create table chats
+(
+    id          varchar not null primary key,
+    user_id     varchar not null,
+    chat_id     varchar not null
+);
+
 create table transactions
 (
     id                  varchar not null primary key,

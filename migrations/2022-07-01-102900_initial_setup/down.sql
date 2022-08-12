@@ -2,3 +2,4 @@
 drop table transactions;
 drop table users;
 drop table ledgers;
+drop table chats;
