@@ -8,7 +8,7 @@ mod helpers;
 mod types;
 use helpers::message_validator;
 
-use crate::helpers::data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::insert_user_into_room};
+use crate::helpers::data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::{insert_user_into_room, is_user_in_chat}};
 use crate::helpers::transaction_handler::execute_transactions;
 
 extern crate strum;
@@ -66,7 +66,6 @@ async fn answer(
     Ok(())
 }
 
-
 fn register(
     _: &AutoSend<Bot>,
     message: Message,
@@ -94,15 +93,30 @@ fn register(
             Err(e) => return e.to_string(),
             Ok(created_user) => created_user
         };
-        match insert_user_into_room(&created_user, message) {
-            Err(e) => return e.to_string(),
+        match insert_user_into_room(&created_user.user_id, &message.chat.id) {
+            Err(e) => e.to_string(),
             Ok(_) => format!("Registered user as: {:?}", created_user.username)
         }
     // too many users exist -> notify invalid state
     } else if users.len() > 1 {
         "Invalid number of users with same id! Please contact the developer.".to_string()
     // user already registered -> check for username change
+    // also check if registering from new chat
     } else {
+        let mut resp = "User already registered".to_string();
+        // check if new chat should be inserted
+        match is_user_in_chat(user.id, message.chat.id) {
+            Err(e) => return e.to_string(),
+            Ok(b) => {
+                if !b {
+                    match insert_user_into_room(&user.id, &message.chat.id) {
+                        Err(e) => return e.to_string(),
+                        Ok(_) => resp = "You have been added to chat!".to_string()
+                    } 
+                }
+            },
+        }
+        // check for username change
         let mut existinig_user = users.pop().unwrap();
         if user.username.as_ref().unwrap().ne(&existinig_user.username) {
             existinig_user.username = user.username.as_ref().unwrap().clone();
@@ -111,7 +125,7 @@ fn register(
                 Ok(updated_user) => format!("Updated user as: {:?}", updated_user.username)
             }
         } else {
-            "User already registered".to_string()
+            resp
         }
     }
 }

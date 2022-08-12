@@ -48,8 +48,8 @@ pub mod transaction_operations {
         let sqlite_transaction = SqliteTransaction::from(new_transaction);
         let conn = establish_connection();
         let _ = insert_into(transactions)
-        .values(&sqlite_transaction)
-        .execute(&conn)?;
+            .values(&sqlite_transaction)
+            .execute(&conn)?;
         Ok(Transaction::from(sqlite_transaction))
     }
 }
@@ -98,22 +98,30 @@ pub mod user_operations {
 pub mod chat_operations {
     use diesel::{result::Error, insert_into};
     use diesel::prelude::*;
-    use teloxide::types::Message;
+    use teloxide::types::{UserId, ChatId};
     use crate::types::chat::{Chat, NewChat, SqliteChat};
     use crate::helpers::data_handler::sqlite_operations::establish_connection;
     use crate::types::schema::chats::dsl::*;
-    use crate::types::user::{User};
     
-    pub fn insert_user_into_room(user: &User, message: Message) -> Result<Chat, Error> {
+    pub fn insert_user_into_room(uid: &UserId, cid: &ChatId) -> Result<Chat, Error> {
         let sqlite_chat = SqliteChat::from(NewChat {
-            user_id: user.user_id,
-            chat_id: message.chat.id
+            user_id: *uid,
+            chat_id: *cid
         });
         let conn = establish_connection();
         let _ = insert_into(chats)
             .values(&sqlite_chat)
             .execute(&conn)?;
         Ok(Chat::from(sqlite_chat))
+    }
+
+    pub fn is_user_in_chat(uid: UserId, cid: ChatId) -> Result<bool, Error> {
+        let conn = establish_connection();
+        let resp = chats
+            .filter(user_id.eq(uid.to_string()))
+            .filter(chat_id.eq(cid.to_string()))
+            .load::<SqliteChat>(&conn)?;
+        Ok(resp.len() > 0)
     }
 }
 

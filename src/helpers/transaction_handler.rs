@@ -68,10 +68,7 @@ fn execute_loan(transaction: NewTransaction) -> bool {
     if let Some(mut ledger) = ledger_option {
         ledger.sum += transaction.sum;
         match update_ledger(ledger) {
-            Ok(_) => {
-                match insert_transaction(transaction) { _ => () }
-                true
-            },
+            Ok(_) => insert_transaction(transaction).is_ok(),
             Err(_) => false,
         }
     } else {
