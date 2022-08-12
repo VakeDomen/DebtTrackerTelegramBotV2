@@ -30,7 +30,7 @@ pub fn validate_message(
     // find sender -> throw any invalid states
     let user = match extract_user(&message) {
         Ok(user) => user,
-        Err(e) => return Err(e.into()),
+        Err(e) => return Err(e),
     };
     // check message type
     let mes = match &message.kind {
@@ -50,12 +50,12 @@ pub fn validate_message(
     // extract all recievers
     let recievers = match extract_recievers(media) {
         Ok(recv) => recv,
-        Err(e) => return Err(e.into()),
+        Err(e) => return Err(e),
     };
     // extract description
     let desctription = match extract_description(&media.text) {
         Ok(desc) => desc,
-        Err(e) => return Err(e.into()),
+        Err(e) => return Err(e),
     };
     // convert into transactions
     let transactions = match into_transactions(
@@ -66,7 +66,7 @@ pub fn validate_message(
             message_type
         ) {
         Ok(transactions) => transactions,
-        Err(e) => return Err(e.into()),
+        Err(e) => return Err(e),
     };
     Ok(transactions)
 }
@@ -84,7 +84,7 @@ fn into_transactions(
     description: String, 
     trans_type: TransactionType
 ) -> Result<Vec<NewTransaction>, Box<dyn Error>> {
-    if recievers.len() == 0 {
+    if recievers.is_empty() {
         return Err("No recievers recognised.".into());
     }
     let int_amount = (amount * 100.) as i32;
@@ -104,12 +104,12 @@ fn into_transactions(
 }
 
 
-fn extract_loan_amount(text: &String) -> Option<f64> {
+fn extract_loan_amount(text: &str) -> Option<f64> {
     let text_fragments = text.split_whitespace().collect::<Vec<&str>>();
     if text_fragments.len() < 2 {
         return None;
     }
-    let amount_fragment = text_fragments[1].replace(",", ".");
+    let amount_fragment = text_fragments[1].replace(',', ".");
     let amount = amount_fragment.parse::<f64>();
     match amount {
         Ok(a) => Some(a),
@@ -126,11 +126,10 @@ fn extract_recievers(message: &MediaText)  -> Result<Vec<User>, Box<dyn Error>> 
         };
         let user = match get_user_by_username(username.to_owned()) {
             Ok(mut found_users) => {
-                let u = match found_users.pop() {
+                match found_users.pop() {
                     Some(u) => u,
                     None => continue,
-                };
-                u
+                }
             },
             Err(e) => return Err(e.into())
         };

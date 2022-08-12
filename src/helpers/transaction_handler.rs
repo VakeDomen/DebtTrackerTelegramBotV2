@@ -50,7 +50,7 @@ fn execute_loan(transaction: NewTransaction) -> bool {
         Ok(mut ledgers) => {
             // query could be Ok() but empty, since
             // the ledger might not yet exist
-            if ledgers.len() > 0 {
+            if !ledgers.is_empty() {
                 // if the ledger exists -> return it
                 Some(ledgers.remove(0))
             } else {

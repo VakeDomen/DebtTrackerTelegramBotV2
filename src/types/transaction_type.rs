@@ -1,5 +1,3 @@
-use std::fmt;
-
 use serde::{Serialize, Deserialize};
 use strum::EnumString;
 

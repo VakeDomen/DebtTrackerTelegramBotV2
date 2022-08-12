@@ -1,6 +1,5 @@
 
 
-use std::str::FromStr;
 use chrono::NaiveDateTime;
 use teloxide::types::UserId;
 use super::{transaction_type::TransactionType};

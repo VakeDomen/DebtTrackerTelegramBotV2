@@ -14,7 +14,6 @@ use crate::helpers::transaction_handler::execute_transactions;
 extern crate strum;
 extern crate pretty_env_logger;
 
-#[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
 
 #[tokio::main]

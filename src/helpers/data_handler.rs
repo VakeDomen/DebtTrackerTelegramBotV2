@@ -17,7 +17,7 @@ pub mod ledger_operations {
             .filter(borrower.eq(bow_string))
             .filter(owes.eq(owe_string))
             .load::<SqliteLedger>(&connection)?;
-        Ok(ledger.into_iter().map(|l| Ledger::from(l)).collect())
+        Ok(ledger.into_iter().map(Ledger::from).collect())
     }
     
     pub fn update_ledger(ledger: Ledger) -> Result<Ledger, Error> {
@@ -67,7 +67,7 @@ pub mod user_operations {
         let resp = users
             .filter(user_id.eq(query_id.to_string()))
             .load::<SqliteUser>(&conn)?;
-        Ok(resp.into_iter().map(|u| User::from(u)).collect())
+        Ok(resp.into_iter().map(User::from).collect())
     }
     
     pub fn get_user_by_username(query_username: String) -> Result<Vec<User>, Error> {
@@ -75,7 +75,7 @@ pub mod user_operations {
         let resp = users
             .filter(name.eq(query_username))
             .load::<SqliteUser>(&conn)?;
-        Ok(resp.into_iter().map(|u| User::from(u)).collect())
+        Ok(resp.into_iter().map(User::from).collect())
     }
     
     pub fn insert_user(new_user: NewUser) -> Result<User, Error>  {
@@ -121,7 +121,7 @@ pub mod chat_operations {
             .filter(user_id.eq(uid.to_string()))
             .filter(chat_id.eq(cid.to_string()))
             .load::<SqliteChat>(&conn)?;
-        Ok(resp.len() > 0)
+        Ok(!resp.is_empty())
     }
 }
 
