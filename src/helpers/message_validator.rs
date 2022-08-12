@@ -1,13 +1,18 @@
 extern crate chrono;
 
 use std::error::Error;
-use serde::__private::de;
 use teloxide::types::{Message, MessageKind, MediaKind, MediaText};
 use chrono::Utc;
 
-use crate::{types::{transaction::NewTransaction, user::User, transaction_type::TransactionType, schema::transactions::transaction_type}, helpers::data_handler::get_user_by_user_id};
+use crate::{
+    types::{
+        transaction::NewTransaction, user::User, 
+        transaction_type::TransactionType
+    }, 
+    helpers::data_handler::user_operations::get_user_by_user_id
+};
 
-use super::data_handler::get_user_by_username;
+use super::data_handler::user_operations::get_user_by_username;
 
 
 pub fn validate_loan_message(message: Message) -> Result<Vec<NewTransaction>, Box<dyn Error>> {

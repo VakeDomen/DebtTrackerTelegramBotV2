@@ -7,9 +7,8 @@ use dotenv::dotenv;
 mod helpers;
 mod types;
 use helpers::message_validator;
-use helpers::text_helper::PAY_DESCRIPTION;
 
-use crate::helpers::data_handler::{insert_user, get_user_by_user_id, update_user};
+use crate::helpers::data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::insert_user_into_room};
 use crate::helpers::transaction_handler::execute_transactions;
 
 extern crate strum;
@@ -73,35 +72,35 @@ fn register(
     message: Message,
 ) -> String {
     info!("User is signing up for the tracker!");
+    println!("{:#?}", message);
     // check valid teloxide message
     let user = match message.from() {
         None => return "Oops something went wrong! Can't detect user.".to_string(),
         Some(user) => user
     };
-
     // check if user has username setup
     match user.username {
         None => return "Please setup a telegram username (under settings -> edit profile) so I can identify you.".to_string(),
         Some(_) =>  {}
     }
-
     // find all redistered users with same id (should be vec of 0 or 1 users)
     let mut users = match get_user_by_user_id(&user.id) {
         Err(e) => return e.to_string(),
         Ok(users) => users
     };
-
     // user does not exist ->  register
     if users.is_empty() {
-        match insert_user(types::user::NewUser::from(user)) {
-            Err(e) => e.to_string(),
-            Ok(created_user) => format!("Registered user as: {:?}", created_user.username)
+        let created_user = match insert_user(types::user::NewUser::from(user)) {
+            Err(e) => return e.to_string(),
+            Ok(created_user) => created_user
+        };
+        match insert_user_into_room(&created_user, message) {
+            Err(e) => return e.to_string(),
+            Ok(_) => format!("Registered user as: {:?}", created_user.username)
         }
-
     // too many users exist -> notify invalid state
     } else if users.len() > 1 {
         "Invalid number of users with same id! Please contact the developer.".to_string()
-
     // user already registered -> check for username change
     } else {
         let mut existinig_user = users.pop().unwrap();

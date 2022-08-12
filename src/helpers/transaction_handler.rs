@@ -1,14 +1,12 @@
-use diesel::IntoSql;
-
 use crate::types::transaction::NewTransaction;
 use crate::types::transaction_type::TransactionType;
 use crate::types::ledger::Ledger;
 
-use super::data_handler::get_ledger;
-use super::data_handler::get_user_by_user_id;
-use super::data_handler::insert_ledger;
-use super::data_handler::insert_transaction;
-use super::data_handler::update_ledger;
+use super::data_handler::ledger_operations::get_ledger;
+use super::data_handler::ledger_operations::insert_ledger;
+use super::data_handler::ledger_operations::update_ledger;
+use super::data_handler::user_operations::get_user_by_user_id;
+use super::data_handler::transaction_operations::insert_transaction;
 use super::ledger_handler::create_ledger_from_transaction;
 use super::text_helper::generate_transaction_response;
 
