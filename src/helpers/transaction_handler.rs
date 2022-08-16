@@ -11,6 +11,9 @@ use super::ledger_handler::create_ledger_from_transaction;
 use super::text_helper::generate_transaction_response;
 
 pub fn execute_transaction(transaction: NewTransaction) -> String {
+    if transaction.initiator == transaction.reciever {
+        return "".to_string();
+    }
     // fetch reciever data
     let reciever = match get_user_by_user_id(&transaction.reciever) {
         Ok(mut user) => user.pop().unwrap(),
@@ -54,7 +57,9 @@ fn execute_payment(transaction: NewTransaction) -> bool {
 }
 
 fn execute_loan(transaction: NewTransaction) -> bool {
-    
+    if transaction.reciever == transaction.initiator {
+        return false;
+    }
     let ledger_option: Option<Ledger> = match get_ledger(&transaction.reciever, &transaction.initiator) {
         Ok(mut ledgers) => {
             // query could be Ok() but empty, since

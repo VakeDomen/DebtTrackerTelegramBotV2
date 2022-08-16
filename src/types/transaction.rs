@@ -29,6 +29,7 @@ pub struct SqliteTransaction {
     pub created: String,
 }
 
+#[derive(Debug)]
 pub struct NewTransaction {
     pub transaction_type: TransactionType,
     pub initiator: UserId,
