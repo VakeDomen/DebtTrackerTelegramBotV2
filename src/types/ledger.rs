@@ -2,7 +2,7 @@ use teloxide::types::UserId;
 use uuid::Uuid;
 use super::schema::ledgers;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ledger {
     pub id: String,
     pub borrower: UserId,

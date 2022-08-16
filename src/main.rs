@@ -8,7 +8,7 @@ mod helpers;
 mod types;
 use helpers::message_validator;
 
-use crate::helpers::{data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::{insert_user_into_room, is_user_in_chat, get_chat_users}, ledger_operations::get_group_ledgers}, text_helper::generate_balance_response};
+use crate::helpers::{data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::{insert_user_into_room, is_user_in_chat, get_chat_users}, ledger_operations::get_group_ledgers}, text_helper::generate_balance_response, cycle_detector::detect_mutual_debt};
 use crate::helpers::transaction_handler::execute_transactions;
 
 extern crate strum;
@@ -164,6 +164,10 @@ fn balance(
         Ok(ledgers) => ledgers,
         Err(e) => return e.to_string()
     };
-    generate_balance_response(ledgers, users)
+    match detect_mutual_debt(users, ledgers) {
+        Ok((leds, usrs)) => generate_balance_response(leds, usrs),
+        Err(e) => e.to_string(),
+    }
+    
 }
 
