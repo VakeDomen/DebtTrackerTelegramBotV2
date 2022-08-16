@@ -1,6 +1,7 @@
 use teloxide::types::UserId;
 use uuid::Uuid;
 use super::schema::users;
+use super::chat::SqliteChat;
 
 #[derive(Debug)]
 pub struct User {

@@ -3,10 +3,10 @@ extern crate chrono;
 use std::error::Error;
 use teloxide::types::{Message, MessageKind, MediaKind, MediaText};
 use chrono::Utc;
-
 use crate::{
     types::{
-        transaction::NewTransaction, user::User, 
+        transaction::NewTransaction, 
+        user::User, 
         transaction_type::TransactionType
     }, 
     helpers::data_handler::user_operations::get_user_by_user_id

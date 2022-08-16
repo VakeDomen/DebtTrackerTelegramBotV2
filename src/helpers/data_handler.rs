@@ -2,7 +2,8 @@
 pub mod ledger_operations {
     use diesel::{QueryDsl, result::Error, insert_into};
     use diesel::prelude::*;
-    use teloxide::types::UserId;
+    use teloxide::types::{UserId};
+    use crate::types::user::User;
     use crate::types::{schema::ledgers::dsl::*, ledger::Ledger};
     use crate::helpers::data_handler::sqlite_operations::establish_connection;
     use crate::types::ledger::{SqliteLedger, NewLedger};
@@ -34,6 +35,15 @@ pub mod ledger_operations {
             .values(&sqlite_ledger)
             .execute(&conn)?;
         Ok(Ledger::from(sqlite_ledger))
+    }
+
+    pub fn get_group_ledgers(group: &Vec<User>) -> Result<Vec<Ledger>, Error> {
+        let conn = establish_connection();
+        let user_ids: Vec<String> = group.into_iter().map(|u| u.user_id.to_string().clone()).collect();
+        let sqlite_ledgers = ledgers
+            .filter(borrower.eq_any(user_ids.clone()).and(owes.eq_any(user_ids)))
+            .load::<SqliteLedger>(&conn)?;
+        Ok(sqlite_ledgers.into_iter().map(Ledger::from).collect())
     }
 }
     
@@ -102,10 +112,13 @@ pub mod chat_operations {
     use crate::types::chat::{Chat, NewChat, SqliteChat};
     use crate::helpers::data_handler::sqlite_operations::establish_connection;
     use crate::types::schema::chats::dsl::*;
+    use crate::types::schema::users::dsl::user_id as uid;
+    use crate::types::schema::users::dsl::users;
+    use crate::types::user::{SqliteUser, User};
     
-    pub fn insert_user_into_room(uid: &UserId, cid: &ChatId) -> Result<Chat, Error> {
+    pub fn insert_user_into_room(reference_user_id: &UserId, cid: &ChatId) -> Result<Chat, Error> {
         let sqlite_chat = SqliteChat::from(NewChat {
-            user_id: *uid,
+            user_id: *reference_user_id,
             chat_id: *cid
         });
         let conn = establish_connection();
@@ -115,14 +128,27 @@ pub mod chat_operations {
         Ok(Chat::from(sqlite_chat))
     }
 
-    pub fn is_user_in_chat(uid: UserId, cid: ChatId) -> Result<bool, Error> {
+    pub fn is_user_in_chat(reference_user_id: UserId, cid: ChatId) -> Result<bool, Error> {
         let conn = establish_connection();
         let resp = chats
-            .filter(user_id.eq(uid.to_string()))
+            .filter(user_id.eq(reference_user_id.to_string()))
             .filter(chat_id.eq(cid.to_string()))
             .load::<SqliteChat>(&conn)?;
         Ok(!resp.is_empty())
     }
+
+    pub fn get_chat_users(cid: &ChatId) -> Result<Vec<User>, Error> {
+        let conn = establish_connection();
+        let chat_rows = chats
+            .filter(chat_id.eq(cid.to_string()))
+            .load::<SqliteChat>(&conn)?;
+        let user_ids: Vec<String> = chat_rows.into_iter().map(|cr| cr.user_id).collect();
+        let usrs = users
+            .filter(uid.eq_any(user_ids))
+            .load::<SqliteUser>(&conn)?;
+        Ok(usrs.into_iter().map(User::from).collect())
+    }
+    
 }
 
 pub mod sqlite_operations {

@@ -11,23 +11,28 @@ use super::ledger_handler::create_ledger_from_transaction;
 use super::text_helper::generate_transaction_response;
 
 pub fn execute_transaction(transaction: NewTransaction) -> String {
+    // fetch reciever data
     let reciever = match get_user_by_user_id(&transaction.reciever) {
         Ok(mut user) => user.pop().unwrap(),
         Err(e) => return e.to_string(), 
     };
+    // fetch sender data
     let sender = match get_user_by_user_id(&transaction.initiator) {
         Ok(mut user) => user.pop().unwrap(),
         Err(e) => return e.to_string(), 
     };
+    // save transaction data before giving away ownership
     let sum = transaction.sum;
     let tr_type = match &transaction.transaction_type {
         TransactionType::Loan => TransactionType::Loan,
         TransactionType::Payment => TransactionType::Payment,
     };
+    // execute payment/loan
     let succ = match transaction.transaction_type {
         TransactionType::Loan => execute_loan(transaction),
         TransactionType::Payment => execute_payment(transaction),
     };
+    // return response based on success of transaction
     generate_transaction_response(sum, sender, reciever, succ, tr_type)
 }
 

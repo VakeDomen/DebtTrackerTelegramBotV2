@@ -40,7 +40,6 @@ pub struct NewTransaction {
 
 impl From<SqliteTransaction> for Transaction {
     fn from(transaction: SqliteTransaction) -> Self {
-        println!("{:#?}", transaction.transaction_type);
         Self { 
             id: transaction.id, 
             transaction_type: transaction.transaction_type.parse().unwrap(),

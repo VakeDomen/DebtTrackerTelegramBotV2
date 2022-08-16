@@ -8,7 +8,7 @@ mod helpers;
 mod types;
 use helpers::message_validator;
 
-use crate::helpers::data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::{insert_user_into_room, is_user_in_chat}};
+use crate::helpers::data_handler::{user_operations::{insert_user, get_user_by_user_id, update_user}, chat_operations::{insert_user_into_room, is_user_in_chat, get_chat_users}, ledger_operations::get_group_ledgers};
 use crate::helpers::transaction_handler::execute_transactions;
 
 extern crate strum;
@@ -70,7 +70,6 @@ fn register(
     message: Message,
 ) -> String {
     info!("User is signing up for the tracker!");
-    println!("{:#?}", message);
     // check valid teloxide message
     let user = match message.from() {
         None => return "Oops something went wrong! Can't detect user.".to_string(),
@@ -156,14 +155,15 @@ fn balance(
     _: &AutoSend<Bot>,
     message: Message,
 ) -> String {
-    info!("Some user is claiming a task!");
-    match message.kind {
-        MessageKind::Common(mes) => {
-            match mes.media_kind {
-                MediaKind::Text(media) => { format!("{:#?}", media.entities) },
-                _ => "Not text media".to_string()
-            }
-        },
-        _ => "Not common message".to_string()
-    }
+    info!("Some user is checking balance!");
+    let users = match get_chat_users(&message.chat.id) {
+        Ok(users) => users,
+        Err(e) => return e.to_string()
+    };
+    let ledgers = match get_group_ledgers(&users) {
+        Ok(ledgers) => ledgers,
+        Err(e) => return e.to_string()
+    };
+    format!("{:#?}", ledgers)
 }
+
