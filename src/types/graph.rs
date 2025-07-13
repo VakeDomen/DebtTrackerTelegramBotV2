@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::collections::LinkedList;
 use std::vec;
 use std::cmp;
 use std::error::Error;
@@ -67,6 +69,67 @@ impl Graph {
         Ok(())
     }
 
+    pub fn resolve_cyclic_debt(&mut self) -> Result<(), Box<dyn Error>> {
+        for node in self.nodes.clone().into_iter() {
+            match self.resolve_cyclic_debt_node(node.clone()) {
+                Ok(_) => continue,
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(())
+    }
+    fn resolve_cyclic_debt_node(&mut self, node_to_resolve: Node) -> Result<(), Box<dyn Error>> {
+        let mut result = LinkedList::new();
+        let mut stack = LinkedList::new();
+        let mut visited = HashMap::new();
+        let to_resolve_uid = node_to_resolve.user_id.to_string();
+        let mut found = false;
+        
+        stack.push_front(node_to_resolve);
+        visited.insert(to_resolve_uid.clone(), true);
+        
+        while !stack.is_empty() {
+            found = false;
+            let front = match stack.pop_front() {
+                Some(n) => n,
+                None => break,
+            };
+            let current = match self.find_node(front.id) {
+                Some(n) => n,
+                None => continue,
+            };
+            result.push_front(current.user_id);
+
+            for neighbour_id in current.connections.iter() {
+                let neighbour = match self.find_node_by_user_string(neighbour_id) {
+                    Some(n) => n,
+                    None => continue,
+                };
+                //if loop closed
+                if current.connections.contains(&to_resolve_uid) {
+                    result.push_front(neighbour.user_id);
+                    found = true;
+                    break;
+                }
+                if !visited.contains_key(neighbour_id) {
+                    visited.insert(neighbour_id.to_string(), true);
+                    stack.push_front(neighbour);
+                }
+                if found  {
+                    break;
+                }
+            }
+        }
+        if found && result.len() > 2 {
+            match self.handle_cyclic_debt(result) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+            self.reset_nodes();
+        }
+        Ok(())
+    }
+
     fn resolve_bidirectional_debt_node(&mut self, node_to_resolve: Node) -> Result<(), Box<dyn Error>> {
         for ledger_id in node_to_resolve.connections.into_iter() {
             // find ledger (connection) to neighbour
@@ -113,8 +176,8 @@ impl Graph {
         }
     }
 
-    fn find_node(self, id: i32) -> Option<Node> {
-        for node in self.nodes.into_iter() {
+    fn find_node(&mut self, id: i32) -> Option<Node> {
+        for node in self.nodes.clone().into_iter() {
             if node.id == id {
                 return Some(node)
             }
@@ -129,6 +192,14 @@ impl Graph {
         }
         None
     }
+    fn find_node_by_user_string(&mut self, user_id: &String) -> Option<Node> {
+        for node in self.nodes.clone().into_iter() {
+            if node.user_id.to_string().eq(user_id) {
+                return Some(node)
+            }
+        }
+        None
+    }
     fn find_ledger(&mut self, id: &String) -> Option<Ledger> {
         for ledger in self.ledgers.clone().into_iter() {
             if ledger.id.eq(id) {
@@ -137,6 +208,16 @@ impl Graph {
         }
         None
     }
+
+    fn find_ledger_by_users(&mut self, borrower: UserId, owes: UserId) -> Option<Ledger> {
+        for ledger in self.ledgers.clone().into_iter() {
+            if ledger.borrower == borrower && ledger.owes == owes {
+                return Some(ledger)
+            }
+        }
+        None
+    }
+
     fn find_user(self, id: &String) -> Option<User> {
         for user in self.users.into_iter() {
             if user.id.eq(id) {
@@ -146,6 +227,61 @@ impl Graph {
         None
     }
 
+    fn handle_cyclic_debt(&mut self, mut result: LinkedList<UserId>) -> Result<(), Box<dyn Error>> {
+        let mut current_option = None;
+        let mut next_option = None;
+        let mut sum = std::i32::MAX;
+        while !result.is_empty() {
+            current_option = next_option;
+            next_option = result.pop_front();
+
+            let current = match current_option {
+                Some(uid) => uid,
+                None => continue,
+            };
+            let next = match next_option {
+                Some(uid) => uid,
+                None => continue,
+            };
+            let ledger = match self.find_ledger_by_users(current,next) {
+                Some(l) => l,
+                None => continue,
+            };
+            sum = cmp::min(sum, ledger.sum);
+            
+        }
+        while !result.is_empty() {
+            current_option = next_option;
+            next_option = result.pop_front();
+
+            let current = match current_option {
+                Some(uid) => uid,
+                None => continue,
+            };
+            let next = match next_option {
+                Some(uid) => uid,
+                None => continue,
+            };
+            let ledger = match self.find_ledger_by_users(current,next) {
+                Some(l) => l,
+                None => continue,
+            };
+            let updated = match reduce_ledger(ledger, sum) {
+                Ok(l) => l,
+                Err(e) => return Err(e),
+            };
+            self.update_ledger(updated);    
+        }
+        
+        Ok(())
+    }
+
+    pub fn reset_nodes(&mut self) {
+        self.ledgers.retain(|l| l.sum != 0);
+        self.nodes = vec![];
+        self.create_nodes();
+    }
+    
 }
 
 
